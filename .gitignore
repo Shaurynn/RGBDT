@@ -221,3 +221,5 @@ docs/
 data/
 dataset/
 archive/
+runs/
+weights/
