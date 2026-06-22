@@ -1,11 +1,8 @@
-# RGBDT
-A computer vision POC evaluating the increased semantic segmentation accuracy of tri-modal RGBDT sensor fusion over standard RGB, RGBD, and RGBT baselines using the MM5 dataset.
-
 # Multimodal RGB-D-T Sensor Fusion: Structural Inspection POC
 
 ## Overview
 This repository contains a Proof of Concept (POC) evaluating a 5-channel multi-modal AI pipeline `(5, 480, 640)`. The primary objective is to prove the viability and quantify the increased accuracy of utilizing tri-modal RGB-D-T (Vision, Depth, and Thermal) data over traditional single-modal (RGB) or bi-modal (RGB-D, RGB-T) approaches.
- 
+
 The architecture targets pixel-accurate semantic segmentation for structural anomaly detection—specifically evaluating environmental wear and tear on rapid transit infrastructure. The pipeline is structured to validate the software architecture prior to deployment on autonomous heavy-lift UAV platforms utilizing companion edge computers (e.g., Jetson Orin Nano / Pixhawk flight controllers).
 
 ## POC Methodology & Experimental Design
@@ -19,43 +16,55 @@ The training loop and evaluation scripts are structured to benchmark four distin
 
 By comparing metric scores across these configurations, this repository serves as the empirical justification for developing a custom, physical sensor fusion payload.
 
+## Dataset Structure
+```
+dataset/MM5/
+├── Class_Annotations/
+├── Depth/
+├── RGB/
+├── Thermal/
+├── train_dataset.csv
+└── eval_dataset.csv
+```
+
 ### Dataset Engineering
 * **Native LWIR:** The MM5 dataset provides raw 16-bit Thermal (LWIR) data, allowing the network to learn true emissive heat signatures natively.
 * **Native Segmentation:** The dataset provides pixel-wise annotations, which are directly ingested by the PyTorch `DataLoader` to train the segmentation backbone.
-* **Modality Filtering:** While MM5 provides 5 distinct sensor cues, the `DataLoader` explicitly extracts only the RGB, Depth, and Thermal directories. 
- 
+* **Modality Filtering:** While MM5 provides 5 distinct sensor cues, the `DataLoader` explicitly extracts only the RGB, Depth, and Thermal directories.
+
 ## Environment Setup
 This pipeline requires a dedicated Python 3.12 virtual environment optimized for CUDA 13.0.
- 
+
 1. Clone the repository.
 2. Install the core PyTorch binaries:
-```bash
-pip install torch torchvision torchaudio --index-url [https://download.pytorch.org/whl/cu130](https://download.pytorch.org/whl/cu130)
-```
+   ```bash
+   pip install torch torchvision torchaudio --index-url [https://download.pytorch.org/whl/cu130](https://download.pytorch.org/whl/cu130)
+   ```
 3. Install the vision stack and MLOps tools:
-```bash
-pip install "opencv-python-headless>=4.10.0" "onnx>=1.18.0" "onnxruntime-gpu>=1.19.0" "label-studio" "grad-cam>=1.5.0" "dvc>=3.50.0" "jupyterlab>=4.2.0" ipywidgets "albumentations>=1.4.0" "timm>=1.0.0" wandb tensorboard
-```
+   ```bash
+   pip install "opencv-python-headless>=4.10.0" "onnx>=1.18.0" "onnxruntime-gpu>=1.19.0" "label-studio" "grad-cam>=1.5.0" "dvc>=3.50.0" "jupyterlab>=4.2.0" ipywidgets "albumentations>=1.4.0" "timm>=1.0.0" wandb tensorboard
+   ```
+
 ## Repository Structure
-* `/data/`: (Empty by default) Directory for the downloaded MM5 dataset folders (RGB, Depth, Thermal, and Annotations).
+* `/dataset/MM5/`: Local host directory containing the structural directories along with split CSV logs.
 * `/src/`: 
-* `dataset.py`: PyTorch `DataLoader` for parsing the MM5 structure and generating tensors for the 4 experimental configurations.
-* `train.py`: The core segmentation training loop and metric evaluation scripts.
+  * `dataset.py`: PyTorch `DataLoader` for parsing the MM5 structure and generating tensors for the 4 experimental configurations.
+  * `train.py`: The core segmentation training loop and metric evaluation scripts.
 * `/notebooks/`: Jupyter notebooks for exploratory data analysis and GradCAM multi-channel attention visualization.
 * `/scripts/`: Custom Label Studio XML configurations for synced multi-modal annotation (reserved for future proprietary data collection).
- 
+
 ## Dataset Acknowledgments & Citations
 **Notice:** The MM5 dataset is **NOT** hosted in this repository. 
- 
+
 If you are running this pipeline, you must acquire the dataset independently from [figshare](https://doi.org/10.6084/m9.figshare.28722164) or the [MM5 GitHub Repository](https://github.com/martinbrennernz/MM5-Dataset).
- 
+
 This POC utilizes the dataset based on the following publication:
 > Brenner, Martin; Reyes, Napoleon; Susnjak, Teo; Barczak, Andre (2025). MM5: Multimodal Image Dataset. figshare. Dataset. https://doi.org/10.6084/m9.figshare.28722164
- 
+
 ## License & Usage Restrictions
- 
+
 **Code License:** The source code within this repository (the PyTorch architectures, training loops, and deployment scripts) is **Proprietary and Confidential**. Unauthorized copying, distribution, or modification is strictly prohibited.
- 
-**Data & Model Restrictions:** The MM5 dataset is licensed under the **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)**. 
+
+**Data & Model Restrictions:** The MM5 dataset is licensed under the **Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)**.
 * Any models or weights developed using the MM5 dataset within this POC are strictly for internal validation and comparative benchmarking. They **may not be used for any commercial or production purpose**.
 * Upon successful validation of the network architecture, the weights generated by this POC will be discarded. All future commercial models will be trained exclusively on proprietary, self-collected data using custom hardware.
