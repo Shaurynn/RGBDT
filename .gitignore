@@ -223,3 +223,4 @@ dataset/
 archive/
 runs/
 weights/
+*.db
