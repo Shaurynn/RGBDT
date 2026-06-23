@@ -29,12 +29,12 @@ class TriModalSegDataset(Dataset):
             A.HorizontalFlip(p=0.5),
             # Modernized API for shifting, scaling, and rotating
             A.Affine(
-                scale=(0.95, 1.05),               # Scale between 95% and 105%
-                translate_percent=(-0.05, 0.05),  # Shift up to 5% on X/Y axis
-                rotate=(-15, 15),                 # Rotate between -15 and +15 degrees
-                mode=cv2.BORDER_CONSTANT,         # Use a solid border...
-                cval=0,                           # ...and fill image borders with 0 (Black)
-                cval_mask=0,                      # ...and fill mask/depth/thermal borders with 0
+                scale=(0.95, 1.05),               
+                translate_percent=(-0.05, 0.05),  
+                rotate=(-15, 15),                 
+                border_mode=cv2.BORDER_CONSTANT,  # <-- Corrected Albumentations argument
+                fill=0,                           # <-- Corrected Albumentations argument (was cval)
+                fill_mask=0,                      # <-- Corrected Albumentations argument (was cval_mask)
                 p=0.5
             ),
         ], additional_targets={'depth': 'mask', 'thermal': 'mask'})

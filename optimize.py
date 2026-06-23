@@ -182,7 +182,7 @@ def objective(trial):
 
 
 def main():
-    print(f"Initializing Research-Grade HPO on {DEVICE}...")
+    print(f"Initializing HPO on {DEVICE}...")
 
     # New DB name to prevent collision with old sweeps
     study_name = "trimodal_research_sweep"
