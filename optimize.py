@@ -184,9 +184,12 @@ def objective(trial):
 def main():
     print(f"Initializing HPO on {DEVICE}...")
 
+
     # New DB name to prevent collision with old sweeps
     study_name = "trimodal_research_sweep"
     storage_name = f"sqlite:///{study_name}.db"
+    
+    print(f"Run 'uv run optuna-dashboard {storage_name}' to visualize the optimization process.")
     
     # HYPERBAND PRUNER (ASHA)
     # This is the gold standard for massive sweeps. It kills bottom-performing models at 
