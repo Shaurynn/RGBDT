@@ -27,8 +27,16 @@ class TriModalSegDataset(Dataset):
         # 1. Synchronized Spatial Transformations (Applied identically across all arrays)
         self.spatial_transform = A.Compose([
             A.HorizontalFlip(p=0.5),
-            # Random scaling and minor rotations for structural perspective variation
-            A.ShiftScaleRotate(shift_limit=0.05, scale_limit=0.05, rotate_limit=15, p=0.5, border_mode=cv2.BORDER_CONSTANT, value=0),
+            # Modernized API for shifting, scaling, and rotating
+            A.Affine(
+                scale=(0.95, 1.05),               # Scale between 95% and 105%
+                translate_percent=(-0.05, 0.05),  # Shift up to 5% on X/Y axis
+                rotate=(-15, 15),                 # Rotate between -15 and +15 degrees
+                mode=cv2.BORDER_CONSTANT,         # Use a solid border...
+                cval=0,                           # ...and fill image borders with 0 (Black)
+                cval_mask=0,                      # ...and fill mask/depth/thermal borders with 0
+                p=0.5
+            ),
         ], additional_targets={'depth': 'mask', 'thermal': 'mask'})
 
     def _load_json_mapping(self):
