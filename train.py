@@ -14,11 +14,6 @@ from model import TriModalYOLOSeg
 
 # --- 1. Custom Loss Function ---
 class FocalDiceLoss(nn.Module):
-    """
-    Composite Loss Function:
-    Focal Loss handles extreme class imbalance.
-    Dice Loss optimizes the geometric overlap of the structural boundaries.
-    """
     def __init__(self, num_classes, ignore_index=0, gamma=2.0, dice_weight=1.0):
         super().__init__()
         self.num_classes = num_classes
@@ -28,10 +23,12 @@ class FocalDiceLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss(ignore_index=ignore_index, reduction='none')
 
     def forward(self, logits, targets):
+        # A. Focal Loss Calculation
         ce_loss = self.ce(logits, targets)
         pt = torch.exp(-ce_loss)
         focal_loss = ((1 - pt) ** self.gamma * ce_loss).mean()
 
+        # B. Dice Loss Calculation
         probs = F.softmax(logits, dim=1)
         targets_one_hot = F.one_hot(targets, num_classes=self.num_classes).permute(0, 3, 1, 2).float()
 
@@ -43,17 +40,28 @@ class FocalDiceLoss(nn.Module):
             if c == self.ignore_index:
                 continue
                 
-            p = probs[:, c]
             t = targets_one_hot[:, c]
             
-            intersection = (p * t).sum(dim=(1, 2))
-            union = p.sum(dim=(1, 2)) + t.sum(dim=(1, 2))
+            # THE FIX: If this specific defect is entirely absent from the batch's ground truth,
+            # we skip it to prevent penalizing tiny softmax noise.
+            if t.sum() == 0:
+                continue
+                
+            p = probs[:, c]
+            
+            # Compute over the entire batch spatial dimensions smoothly
+            intersection = (p * t).sum()
+            union = p.sum() + t.sum()
             
             dice_c = 1.0 - (2.0 * intersection + smooth) / (union + smooth)
-            dice_loss += dice_c.mean()
+            dice_loss += dice_c
             valid_classes += 1
 
-        dice_loss = dice_loss / max(valid_classes, 1)
+        # Prevent division by zero if an entire batch happens to be 100% background
+        if valid_classes > 0:
+            dice_loss = dice_loss / valid_classes
+        else:
+            dice_loss = 0.0
 
         return focal_loss + (self.dice_weight * dice_loss)
 
