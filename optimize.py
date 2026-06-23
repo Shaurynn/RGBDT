@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import torch.optim.lr_scheduler as lr_scheduler
 import optuna
 from optuna.trial import TrialState
 from torch.utils.data import DataLoader
@@ -13,13 +14,13 @@ from dataset import TriModalSegDataset
 from model import TriModalYOLOSeg
 
 # --- Global Configurations ---
+# Increased to 100 to give SGD and Schedulers room to converge
+MAX_EPOCHS = 100 
 BATCH_SIZE = 8
-MAX_EPOCHS = 30  # Lightweight epoch cap for rapid hyperparameter sweeps
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 TRAIN_CSV = "dataset/MM5/train_dataset.csv"
 EVAL_CSV = "dataset/MM5/eval_dataset.csv"
 
-# --- Mirroring Production Loss & Metric Logic ---
 class FocalDiceLoss(nn.Module):
     def __init__(self, num_classes, ignore_index=0, gamma=2.0, dice_weight=1.0):
         super().__init__()
@@ -74,10 +75,22 @@ def compute_batch_miou(logits, targets, num_classes, ignore_index=0):
 def objective(trial):
     print(f"\n--- Starting Trial {trial.number} ---")
 
-    # 1. Hyperparameter Search Space Definition
-    lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
+    # 1. EXPANDED SEARCH SPACE
+    # ------------------------
+    # Loss Function Tuning
+    gamma = trial.suggest_float("gamma", 1.0, 5.0)
+    dice_weight = trial.suggest_float("dice_weight", 0.5, 3.0)
+
+    # Optimizer Selection
+    optimizer_name = trial.suggest_categorical("optimizer", ["AdamW", "RMSprop", "SGD"])
+    
+    # SGD often requires a higher starting learning rate than Adam
+    lr_upper_bound = 1e-1 if optimizer_name == "SGD" else 1e-2
+    lr = trial.suggest_float("lr", 1e-5, lr_upper_bound, log=True)
     weight_decay = trial.suggest_float("weight_decay", 1e-6, 1e-2, log=True)
-    optimizer_name = trial.suggest_categorical("optimizer", ["AdamW", "RMSprop"])
+
+    # Learning Rate Scheduler Selection
+    scheduler_name = trial.suggest_categorical("scheduler", ["CosineAnnealing", "ReduceLROnPlateau", "None"])
 
     # 2. Data & Model Setup
     train_dataset = TriModalSegDataset(csv_file=TRAIN_CSV)
@@ -89,17 +102,35 @@ def objective(trial):
     NUM_CLASSES = train_dataset.num_classes
 
     model = TriModalYOLOSeg(in_channels=5, num_classes=NUM_CLASSES).to(DEVICE)
-    criterion = FocalDiceLoss(num_classes=NUM_CLASSES, ignore_index=0)
     
+    # Inject dynamically suggested loss parameters
+    criterion = FocalDiceLoss(num_classes=NUM_CLASSES, ignore_index=0, gamma=gamma, dice_weight=dice_weight)
+    
+    # 3. Dynamic Optimizer Injection
     if optimizer_name == "AdamW":
         optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    elif optimizer_name == "RMSprop":
+        momentum = trial.suggest_float("rmsprop_momentum", 0.4, 0.95)
+        optimizer = optim.RMSprop(model.parameters(), lr=lr, weight_decay=weight_decay, momentum=momentum)
+    elif optimizer_name == "SGD":
+        # SGD requires heavy momentum tuning and optionally Nesterov acceleration
+        sgd_momentum = trial.suggest_float("sgd_momentum", 0.8, 0.99)
+        nesterov = trial.suggest_categorical("nesterov", [True, False])
+        optimizer = optim.SGD(model.parameters(), lr=lr, weight_decay=weight_decay, momentum=sgd_momentum, nesterov=nesterov)
+
+    # 4. Dynamic Scheduler Injection
+    if scheduler_name == "CosineAnnealing":
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=MAX_EPOCHS)
+    elif scheduler_name == "ReduceLROnPlateau":
+        patience = trial.suggest_int("plateau_patience", 3, 10)
+        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='max', factor=0.5, patience=patience)
     else:
-        optimizer = optim.RMSprop(model.parameters(), lr=lr, weight_decay=weight_decay, momentum=0.9)
+        scheduler = None
 
     scaler = GradScaler(DEVICE.type)
     best_val_miou = 0.0
 
-    # 3. Execution Loop
+    # 5. Execution Loop
     for epoch in range(MAX_EPOCHS):
         model.train()
         for tensors, masks in train_loader:
@@ -132,50 +163,66 @@ def objective(trial):
         if avg_val_miou > best_val_miou:
             best_val_miou = avg_val_miou
 
-        # 4. Report Metric to Optuna Pruner
+        # Step the Scheduler
+        if scheduler is not None:
+            if scheduler_name == "ReduceLROnPlateau":
+                scheduler.step(avg_val_miou)  # Plateaus are based on the metric
+            else:
+                scheduler.step()              # Cosine steps blindly per epoch
+
+        # 6. Report Metric to Optuna Hyperband Pruner
         trial.report(avg_val_miou, epoch)
 
-        # 5. Pruning Execution
         if trial.should_prune():
             print(f"Trial {trial.number} pruned at epoch {epoch} (mIoU: {avg_val_miou:.4f})")
             raise optuna.exceptions.TrialPruned()
 
     print(f"Trial {trial.number} completed. Best Validation mIoU: {best_val_miou:.4f}")
-    return best_val_miou  # Optuna maximizes this returned score
+    return best_val_miou
 
 
 def main():
-    print(f"Initializing Hyperparameter Optimization on {DEVICE}...")
+    print(f"Initializing Research-Grade HPO on {DEVICE}...")
 
-    study_name = "trimodal_yolo_sweep"
+    # New DB name to prevent collision with old sweeps
+    study_name = "trimodal_research_sweep"
     storage_name = f"sqlite:///{study_name}.db"
     
-    # CRITICAL: Direction changed to MAXIMIZE geometric overlap (mIoU)
+    # HYPERBAND PRUNER (ASHA)
+    # This is the gold standard for massive sweeps. It kills bottom-performing models at 
+    # checkpoints (e.g., epoch 10, epoch 30), allocating full compute only to the best models.
+    pruner = optuna.pruners.HyperbandPruner(
+        min_resource=10, 
+        max_resource=MAX_EPOCHS, 
+        reduction_factor=3
+    )
+
     study = optuna.create_study(
         study_name=study_name,
         storage=storage_name,
         direction="maximize",
         load_if_exists=True,
-        pruner=optuna.pruners.MedianPruner(n_startup_trials=5, n_warmup_steps=8, interval_steps=1)
+        pruner=pruner
     )
 
-    print(f"Executing search. Press Ctrl+C to safely pause the study at any time.")
+    print(f"Executing deep search. Press Ctrl+C to safely pause.")
     
     try:
-        study.optimize(objective, n_trials=30, gc_after_trial=True)
+        # Pushed to 100 trials to explore the massively expanded dimensions
+        study.optimize(objective, n_trials=100, gc_after_trial=True)
     except KeyboardInterrupt:
         print("\nOptimization manually paused.")
 
     pruned_trials = study.get_trials(deepcopy=False, states=[TrialState.PRUNED])
     complete_trials = study.get_trials(deepcopy=False, states=[TrialState.COMPLETE])
 
-    print("\n--- Study Statistics ---")
-    print(f"Number of finished trials: {len(study.trials)}")
-    print(f"Number of pruned trials: {len(pruned_trials)}")
-    print(f"Number of complete trials: {len(complete_trials)}")
+    print("\n--- Research Sweep Statistics ---")
+    print(f"Total Trials: {len(study.trials)}")
+    print(f"Pruned (Killed Early): {len(pruned_trials)}")
+    print(f"Completed (Full 100 Epochs): {len(complete_trials)}")
 
     if complete_trials:
-        print("\n--- Best Trial ---")
+        print("\n--- Absolute Best Trial ---")
         trial = study.best_trial
         print(f"Highest Validation mIoU: {trial.value:.4f}")
         print("Optimal Hyperparameters:")

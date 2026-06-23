@@ -6,6 +6,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.amp import autocast, GradScaler
 from torch.utils.tensorboard import SummaryWriter
+from torchinfo import summary
 from tqdm import tqdm
 
 from dataset import TriModalSegDataset
@@ -76,8 +77,6 @@ def compute_batch_miou(logits, targets, num_classes, ignore_index=0):
         intersection = (pred_inds & target_inds).sum().item()
         union = (pred_inds | target_inds).sum().item()
 
-        # If this class doesn't exist in the prediction or the target, ignore it 
-        # so it doesn't arbitrarily drag down the mean score of the batch
         if union == 0:
             continue
 
@@ -88,10 +87,7 @@ def compute_batch_miou(logits, targets, num_classes, ignore_index=0):
 
 # --- 3. Maximization Early Stopping ---
 class EarlyStopping:
-    """
-    Early stops the training if mIoU (Metric) doesn't improve after a given patience.
-    Note: We are now looking for the score to GO UP, not down.
-    """
+    """Early stops the training if mIoU doesn't improve after a given patience."""
     def __init__(self, patience=15, min_delta=0.001, verbose=True, path='weights/best_trimodal_seg.pt'):
         self.patience = patience
         self.min_delta = min_delta
@@ -124,6 +120,36 @@ class EarlyStopping:
         torch.save(model.state_dict(), self.path)
 
 
+# --- 4. Architectural Inspection ---
+def inspect_model_architecture(model, num_classes, device):
+    """Generates a Keras-like summary table for the PyTorch architecture."""
+    print("\n" + "="*75)
+    print(f"Analyzing TriModalYOLOSeg Architecture ({num_classes} Output Channels)")
+    print("="*75)
+    
+    input_size = (1, 5, 480, 640)
+    
+    # Generate torchinfo summary
+    model_stats = summary(
+        model, 
+        input_size=input_size,
+        col_names=["input_size", "output_size", "num_params", "mult_adds"],
+        depth=3,
+        verbose=0,
+        device=device
+    )
+    print(model_stats)
+    
+    total_params = sum(p.numel() for p in model.parameters())
+    trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    
+    print("\n--- PyTorch Parameter Verification ---")
+    print(f"Total Parameters:     {total_params:,}")
+    print(f"Trainable Parameters: {trainable_params:,}")
+    print(f"Non-trainable Params: {total_params - trainable_params:,}\n")
+    print("="*75 + "\n")
+
+
 def main():
     BATCH_SIZE = 8
     MAX_EPOCHS = 300
@@ -144,11 +170,11 @@ def main():
     
     NUM_CLASSES = train_dataset.num_classes
 
+    # --- Initialize & Inspect Model ---
     model = TriModalYOLOSeg(in_channels=5, num_classes=NUM_CLASSES).to(DEVICE)
+    inspect_model_architecture(model, NUM_CLASSES, DEVICE)
     
-    # Injecting the new Composite Loss Function
     criterion = FocalDiceLoss(num_classes=NUM_CLASSES, ignore_index=0)
-    
     optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-4)
     scaler = GradScaler(DEVICE.type)
     
@@ -156,7 +182,8 @@ def main():
     early_stopper = EarlyStopping(patience=PATIENCE, verbose=True, path=checkpoint_path)
 
     writer = SummaryWriter(log_dir="runs/TriModal_POC_Exp1")
-    print("\n--- TensorBoard Live Tracking Enabled ---")
+    print("--- TensorBoard Live Tracking Enabled ---")
+    print("Run 'tensorboard --logdir=runs' in a new terminal to view curves.\n")
 
     for epoch in range(MAX_EPOCHS):
         # --- Training Loop ---
@@ -181,7 +208,7 @@ def main():
             
         avg_train_loss = train_loss / len(train_loader)
         
-        # --- Validation Loop (with mIoU) ---
+        # --- Validation Loop ---
         model.eval()
         val_loss = 0.0
         val_miou_accum = 0.0
@@ -197,21 +224,20 @@ def main():
                     loss = criterion(logits, masks)
                 
                 val_loss += loss.item()
-                # Compute and accumulate geometric accuracy
                 val_miou_accum += compute_batch_miou(logits, masks, NUM_CLASSES, ignore_index=0)
                 batches += 1
                 
         avg_val_loss = val_loss / batches
         avg_val_miou = val_miou_accum / batches
         
-        # Log all metrics to TensorBoard
+        # Log to TensorBoard
         writer.add_scalars("Loss", {'Train': avg_train_loss, 'Validation': avg_val_loss}, epoch + 1)
         writer.add_scalar("Validation_mIoU", avg_val_miou, epoch + 1)
         writer.add_scalar("Learning_Rate", optimizer.param_groups[0]['lr'], epoch + 1)
         
         print(f"Epoch {epoch+1} Summary | Train Loss: {avg_train_loss:.4f} | Eval Loss: {avg_val_loss:.4f} | mIoU: {avg_val_miou:.4f}")
 
-        # Check Early Stopping against mIoU, not Loss
+        # Check Early Stopping
         early_stopper(avg_val_miou, model)
         
         if early_stopper.early_stop:
