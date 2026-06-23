@@ -162,8 +162,8 @@ def main():
     print(f"Executing training on device: {DEVICE}")
 
     print("Initializing datasets...")
-    train_dataset = TriModalSegDataset(csv_file="dataset/MM5/train_dataset.csv")
-    eval_dataset = TriModalSegDataset(csv_file="dataset/MM5/eval_dataset.csv")
+    train_dataset = TriModalSegDataset(csv_file="dataset/MM5/train_dataset.csv", split="train")
+    eval_dataset = TriModalSegDataset(csv_file="dataset/MM5/eval_dataset.csv", split="eval")
     
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True)
     eval_loader = DataLoader(eval_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, pin_memory=True)

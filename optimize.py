@@ -93,8 +93,8 @@ def objective(trial):
     scheduler_name = trial.suggest_categorical("scheduler", ["CosineAnnealing", "ReduceLROnPlateau", "None"])
 
     # 2. Data & Model Setup
-    train_dataset = TriModalSegDataset(csv_file=TRAIN_CSV)
-    eval_dataset = TriModalSegDataset(csv_file=EVAL_CSV)
+    train_dataset = TriModalSegDataset(csv_file=TRAIN_CSV, split="train")
+    eval_dataset = TriModalSegDataset(csv_file=EVAL_CSV, split="eval")
     
     train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4, pin_memory=True)
     eval_loader = DataLoader(eval_dataset, batch_size=BATCH_SIZE, shuffle=False, num_workers=4, pin_memory=True)
