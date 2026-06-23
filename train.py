@@ -16,8 +16,8 @@ from model import TriModalYOLOSeg
 class FocalDiceLoss(nn.Module):
     """
     Composite Loss Function:
-    Focal Loss handles extreme class imbalance (98% background vs 2% anomaly).
-    Dice Loss directly optimizes the overlap of the structural boundaries.
+    Focal Loss handles extreme class imbalance.
+    Dice Loss optimizes the geometric overlap of the structural boundaries.
     """
     def __init__(self, num_classes, ignore_index=0, gamma=2.0, dice_weight=1.0):
         super().__init__()
@@ -28,12 +28,10 @@ class FocalDiceLoss(nn.Module):
         self.ce = nn.CrossEntropyLoss(ignore_index=ignore_index, reduction='none')
 
     def forward(self, logits, targets):
-        # A. Focal Loss Calculation
         ce_loss = self.ce(logits, targets)
         pt = torch.exp(-ce_loss)
         focal_loss = ((1 - pt) ** self.gamma * ce_loss).mean()
 
-        # B. Dice Loss Calculation
         probs = F.softmax(logits, dim=1)
         targets_one_hot = F.one_hot(targets, num_classes=self.num_classes).permute(0, 3, 1, 2).float()
 
@@ -51,7 +49,6 @@ class FocalDiceLoss(nn.Module):
             intersection = (p * t).sum(dim=(1, 2))
             union = p.sum(dim=(1, 2)) + t.sum(dim=(1, 2))
             
-            # Dice coefficient: (2 * intersection) / (prediction + target)
             dice_c = 1.0 - (2.0 * intersection + smooth) / (union + smooth)
             dice_loss += dice_c.mean()
             valid_classes += 1
@@ -63,7 +60,7 @@ class FocalDiceLoss(nn.Module):
 
 # --- 2. Geometric Metric Evaluation ---
 def compute_batch_miou(logits, targets, num_classes, ignore_index=0):
-    """Calculates Mean Intersection over Union (mIoU) for a given batch."""
+    """Calculates Mean Intersection over Union (mIoU)."""
     preds = torch.argmax(logits, dim=1)
     ious = []
     
@@ -88,7 +85,7 @@ def compute_batch_miou(logits, targets, num_classes, ignore_index=0):
 # --- 3. Maximization Early Stopping ---
 class EarlyStopping:
     """Early stops the training if mIoU doesn't improve after a given patience."""
-    def __init__(self, patience=15, min_delta=0.001, verbose=True, path='weights/best_trimodal_seg.pt'):
+    def __init__(self, patience=20, min_delta=0.001, verbose=True, path='weights/best_trimodal_seg.pt'):
         self.patience = patience
         self.min_delta = min_delta
         self.verbose = verbose
@@ -129,7 +126,6 @@ def inspect_model_architecture(model, num_classes, device):
     
     input_size = (1, 5, 480, 640)
     
-    # Generate torchinfo summary
     model_stats = summary(
         model, 
         input_size=input_size,
@@ -151,16 +147,18 @@ def inspect_model_architecture(model, num_classes, device):
 
 
 def main():
+    # --- Configurations ---
     BATCH_SIZE = 8
-    MAX_EPOCHS = 300
-    PATIENCE = 20
-    LEARNING_RATE = 1e-3
+    MAX_EPOCHS = 150
+    PATIENCE = 25
+    STARTING_LR = 1e-3
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     WEIGHTS_DIR = "weights"
     
     os.makedirs(WEIGHTS_DIR, exist_ok=True)
-    print(f"Executing training on device: {DEVICE}")
+    print(f"Executing Phase 2 Baseline Training on: {DEVICE}")
 
+    # 1. Initialize Datasets (Activating Albumentations via split="train")
     print("Initializing datasets...")
     train_dataset = TriModalSegDataset(csv_file="dataset/MM5/train_dataset.csv", split="train")
     eval_dataset = TriModalSegDataset(csv_file="dataset/MM5/eval_dataset.csv", split="eval")
@@ -170,23 +168,31 @@ def main():
     
     NUM_CLASSES = train_dataset.num_classes
 
-    # --- Initialize & Inspect Model ---
+    # 2. Initialize & Inspect Model
     model = TriModalYOLOSeg(in_channels=5, num_classes=NUM_CLASSES).to(DEVICE)
     inspect_model_architecture(model, NUM_CLASSES, DEVICE)
     
-    criterion = FocalDiceLoss(num_classes=NUM_CLASSES, ignore_index=0)
-    optimizer = optim.AdamW(model.parameters(), lr=LEARNING_RATE, weight_decay=1e-4)
+    # 3. Setup Loss, Optimizer, and Schedulers
+    # Gamma=2.0 handles extreme class imbalance; Dice_Weight=1.0 forces geometric alignment
+    criterion = FocalDiceLoss(num_classes=NUM_CLASSES, ignore_index=0, gamma=2.0, dice_weight=1.0)
+    
+    # AdamW is utilized here for guaranteed initial convergence
+    optimizer = optim.AdamW(model.parameters(), lr=STARTING_LR, weight_decay=1e-4)
+    
+    # Smoothly decay the learning rate to a minimum of 1e-6 by the final epoch
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=MAX_EPOCHS, eta_min=1e-6)
+    
     scaler = GradScaler(DEVICE.type)
     
     checkpoint_path = os.path.join(WEIGHTS_DIR, "best_trimodal_seg.pt")
     early_stopper = EarlyStopping(patience=PATIENCE, verbose=True, path=checkpoint_path)
 
-    writer = SummaryWriter(log_dir="runs/TriModal_POC_Exp1")
+    writer = SummaryWriter(log_dir="runs/TriModal_Baseline_Run")
     print("--- TensorBoard Live Tracking Enabled ---")
     print("Run 'tensorboard --logdir=runs' in a new terminal to view curves.\n")
 
     for epoch in range(MAX_EPOCHS):
-        # --- Training Loop ---
+        # --- Training Phase ---
         model.train()
         train_loss = 0.0
         
@@ -208,7 +214,10 @@ def main():
             
         avg_train_loss = train_loss / len(train_loader)
         
-        # --- Validation Loop ---
+        # Step the learning rate scheduler
+        scheduler.step()
+        
+        # --- Validation Phase ---
         model.eval()
         val_loss = 0.0
         val_miou_accum = 0.0
@@ -230,14 +239,14 @@ def main():
         avg_val_loss = val_loss / batches
         avg_val_miou = val_miou_accum / batches
         
-        # Log to TensorBoard
+        # --- Logging ---
         writer.add_scalars("Loss", {'Train': avg_train_loss, 'Validation': avg_val_loss}, epoch + 1)
         writer.add_scalar("Validation_mIoU", avg_val_miou, epoch + 1)
         writer.add_scalar("Learning_Rate", optimizer.param_groups[0]['lr'], epoch + 1)
         
         print(f"Epoch {epoch+1} Summary | Train Loss: {avg_train_loss:.4f} | Eval Loss: {avg_val_loss:.4f} | mIoU: {avg_val_miou:.4f}")
 
-        # Check Early Stopping
+        # --- Early Stopping Check ---
         early_stopper(avg_val_miou, model)
         
         if early_stopper.early_stop:
