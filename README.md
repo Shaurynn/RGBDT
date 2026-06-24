@@ -79,6 +79,7 @@ Figure 5 (Top: Red Onion | Bottom: Pear): Successful class isolation. Notice how
 
 ### Case Study 2: Debugging Feature Entanglement
 Grad-CAM is not just a presentation tool; it is a critical diagnostic mechanism used to audit the network during the Microtune phase.
+
 ![Grad-CAM Green Apple image](assets/apple_green_bad.png)
 
 ![Grad-CAM Green Apple image](assets/apple_green.png)
