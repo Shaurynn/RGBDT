@@ -129,7 +129,7 @@ This POC successfully validated our training state machine and the mechanics of 
 ---
 
 ## 🙏 Acknowledgments & Citations
-This Proof of Concept would not be possible without the MM5 Dataset. We sincerely thank the original creators and authors for their foundational work in multi-modal data collection, hardware synchronization, and curation, which enabled the training and evaluation of this architecture.
+This project would not be possible without the MM5 Dataset. We sincerely thank the original creators and authors for their foundational work in multi-modal data collection, hardware synchronization, and curation, which enabled the training and evaluation of this architecture.
 
 If you utilize this pipeline, the underlying architecture, or the data, please cite the primary publication alongside the dataset repository:
 
