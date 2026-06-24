@@ -1,18 +1,18 @@
-# TriModal Structural Segmentation: RGB-D-T Tensor Viability POC
+# TriModal Segmentation: RGB-D-T Tensor Using Adapted 5-channel YOLO & Pipeline Template
 
-A Proof of Concept (POC) demonstrating the mathematical viability of 5-channel multi-modal tensor fusion (RGB, Depth, Thermal) for agricultural anomaly segmentation (e.g., fruit freshness, bruising, rot) using the MM5 dataset.
+An experiment demonstrating the mathematical viability of 5-channel multi-modal tensor fusion (RGB, Depth, Thermal) for anomaly segmentation in images of fruits (e.g., fruit freshness, bruising, rot) using the MM5 dataset, as well as the creation of a training pipeline to iteratively test sensor fusion models.
 
 ## 🔬 MLOps Protocol
-This repository follows the Continuous Training (CT) MLOps architecture (Level 1/2) for reproducibility during algorithm development.
+This pipeline strive to adhere to the Continuous Training (CT) MLOps architecture (Level 1/2) for reproducibility during algorithm development.
 
-To eliminate human error during this POC phase, training is orchestrated via an autonomous State Machine. The pipeline enforces Curriculum Learning, automatically cascading weights through strict mathematical phases:
+To eliminate human error (i.e. people making "bad choices"), training is orchestrated via an autonomous State Machine. The pipeline enforces Curriculum Learning, automatically cascading weights through strict mathematical phases:
 1.  Baseline: Warm-up phase establishing initial feature extraction.
 2.  Hyperparameter Optimization (HPO): Automated Bayesian search via Optuna to determine the mathematical ceiling for learning rate, momentum, and focal loss parameters.
-3.  Hero Run: Aggressive structural mapping using optimal hyperparameters.
+3.  The Naruto Run: Aggressive structural mapping using optimal hyperparameters. Not "Hero" level yet because we have no largescale compute.
 4.  Microtune: Flat-decay edge refinement for sub-millimeter precision.
 
 ## 🗄️ Data Version Control (DVC)
-To ensure absolute reproducibility between training logs and dataset states, all multi-modal images are tracked via `dvc` and stored remotely in Google Drive.
+To ensure absolute reproducibility between training logs and dataset states, all multi-modal images will be/are tracked via `dvc` and stored remotely in Google Drive.
 * The active dataset pointer is located at `dataset/MM5.dvc`.
 * Do not manually alter the contents of the dataset folder without executing `dvc add dataset/MM5` and committing the resulting hash to Git.
 * Refer to `DATA_CHANGELOG.md` for the strict historical lineage of all sensor additions and annotation corrections.
@@ -45,7 +45,7 @@ Figure 1: Parallel Coordinate Plot detailing the Optuna trials. The converging l
 The Hero and Microtune phases demonstrated smooth asymptotic convergence with no signs of overfitting.
 
 ![TensorBoard Training vs Eval Loss image](assets/tb_loss.svg)
-Figure 2: Training Loss vs. Validation Loss across the 300-epoch Hero Run. The tight grouping indicates excellent mathematical generalization without dataset texture memorization.
+Figure 2: Training Loss vs. Validation Loss across the 300-epoch Naruto Run. The tight grouping indicates excellent mathematical generalization without dataset texture memorization.
 
 ![TensorBoard Validation mIoU image](assets/tb_miou.svg)
 Figure 3: Validation mIoU progression, capturing the network's geometric precision scaling up to a peak plateau before early stopping was triggered.
@@ -62,7 +62,7 @@ Heatmaps are exported to `results/<ModelName>/<Run>/explainability/`.
 How to Interpret the Heatmaps:
 * Deep Red / Orange Zones: These pixels provided the highest mathematical gradient. The network explicitly used this specific geometric or thermal texture to classify the anomaly.
 * Blue / Cool Zones: These pixels were suppressed by the network and ignored during classification.
-* Validation Standard: A successful model will show red zones tightly hugging the physical boundaries of the spalling or water pooling. If the red zone highlights a background object (like a drone shadow or a random piece of debris), the model is biased and the dataset requires heavier augmentation.
+* Validation Standard: A successful model will show red zones tightly hugging the physical boundaries of the object. If the red zone highlights a background object, the model is biased and the dataset probably requires heavier augmentation.
 
 The following extractions from our MM5 diagnostic logs demonstrate how the network prioritizes specific multi-modal sensor inputs, and crucially, how we use these heatmaps to debug architectural bias.
 
@@ -94,9 +94,9 @@ Figure 7: Catching environmental bias. In this diagnostic heatmap, the model exh
 ---
 
 ## ⚙️ Edge Deployment & Quantization (Jetson Orin Nano Super)
-The pipeline automatically freezes the PyTorch computational graph and serializes it to a universally portable `.onnx` artifact located in `results/<ModelName>/<Run>/deployment/`.
+The pipeline automatically freezes the PyTorch computational graph and serializes it to a universally portable `.onnx` artifact located in `results/<ModelName>/<Run>/deployment/`, allowing for hardware-specific quantization testing.
 
-You cannot compile the TensorRT engine on x86 architecture. The engine must be compiled directly on the target Ampere silicon.
+Note: TensorRT engines must be compiled directly on the target Ampere silicon.
 
 1. Transfer the `.onnx` file to the Jetson Orin Nano Super.
 2. Execute NVIDIA's `trtexec` to quantize the 32-bit floating-point weights to FP16 and fuse the memory operations.
@@ -104,7 +104,27 @@ You cannot compile the TensorRT engine on x86 architecture. The engine must be c
 ```bash 
 /usr/src/tensorrt/bin/trtexec \   --onnx=trimodal_seg_dynamic.onnx \   --saveEngine=trimodal_seg_fp16.engine \   --fp16 \   --workspace=4096 \   --optShapes=input_rgbdt:1x5x480x640 \   --minShapes=input_rgbdt:1x5x480x640 \   --maxShapes=input_rgbdt:4x5x480x640 
 ```
-This benchmark confirms whether the heavy 5-channel tensor architecture can maintain 30+ FPS inference speeds under strict edge hardware constraints.
+This benchmark will confirm whether the heavy 5-channel tensor architecture can maintain 30+ FPS inference speeds under strict edge hardware constraints.
+
+---
+
+## 🗣️ Discussion: Architectural Trade-offs
+Our experiment utilizing an early-fusion Convolutional Neural Network (TriModalYOLOSeg) achieved a baseline validation mIoU of 46.04%. While this successfully proves the mathematical viability of fusing 5-channel tensors, we must contextualize this against the state-of-the-art architectures published by the MM5 dataset creators, who achieved 88.3% (GF-Net) and 84.18% (CMAG).
+
+This performance delta highlights a fundamental MLOps design trade-off between ultimate segmentation fidelity and embedded edge deployment capabilities:
+
+* The "Where to Fuse" Dilemma: Our architecture stacks RGB, Depth, and Thermal into a single 5-channel tensor at the input layer (Early Fusion). While this is incredibly fast, it operates on a lethal assumption: pixel-perfect spatial alignment. Brenner et al. demonstrated that spatial entanglement at the encoder level creates cascading failures if sensor parallax or mechanical vibrations shift the thermal/depth pixels. Their CMAG architecture utilizes Decoder-Level (Late) Fusion, processing each sensor through an independent backbone before fusing at the pre-logit stage, allowing the network to survive mechanical shifts of up to 40 pixels with minimal degradation.
+* CNNs vs. Transformers: By utilizing a YOLO-based CNN, our pipeline prioritizes high-speed spatial feature extraction custom-tailored for Ampere edge silicon (such as the Jetson Orin Nano). In doing so, we traded away the Global Context Modality Attention (GCMA) found in their SegFormer (MiT-B0) backbone. Transformers use global attention to find cross-modal correlations (e.g., matching a thermal delta to an RGB texture) that CNNs structurally struggle to capture.
+
+---
+
+## 🏁 Conclusion & Next Steps: Hardware Deployment Strategy
+This POC successfully validated our training state machine and the mechanics of RGB-D-T tensor fusion. However, as we transition from algorithmic baselines to deploying our own physical sensor arrays and sorting hardware, we must implement several critical pipeline upgrades derived from the MM5 methodology to avoid alignment and normalization failures:
+
+1. Abandon Auto-Gain Thermal (DTMRE): Standard Automatic Gain Control (AGC) ruins thermal consistency across frames. We must implement Deterministic Thermal Multi-Resolution Encoding (DTMRE) to map raw 16-bit temperature values to fixed 24-bit color gradients. This prevents the network from memorizing relative scene brightness instead of true metabolic temperature.
+2. Adaptive Depth Encoding (ADMRE): Uniformly quantizing 16-bit depth into 255 values destroys geometric edge fidelity. We will integrate Adaptive Depth Multi-Resolution Encoding (ADMRE) using Kernel Density Estimation to concentrate our bit-depth resolution strictly within the physical envelope of the target.
+3. Modality-Wise Normalization: We will update our ingestion scripts to calculate exact, dataset-wide means and standard deviations independently for the Thermal and Depth channels, rather than applying a blanket ImageNet normalization that corrupts cross-spectral amplitude differences.
+4. Hardware Calibration & Annotation (MAR): We cannot calibrate a thermal camera with a standard printed checkerboard. We will adopt the use of copper-plated, heated checkerboards for accurate thermal-to-RGB spatial calibration. Furthermore, to eliminate manual annotation bottlenecks on blurry auxiliary feeds, we will implement Multimodal Annotation Remapping (MAR) to mathematically project high-resolution RGB annotations directly onto the raw thermal/UV canvas using inverse calibration matrices.
 
 ---
 
