@@ -11,7 +11,7 @@ from torch.amp import autocast, GradScaler
 
 # Import established modules
 from dataset import TriModalSegDataset
-from model import TriModalYOLOSeg
+from models import TriModalYOLOSeg
 
 # --- Global Configurations ---
 # Increased to 100 to give SGD and Schedulers room to converge

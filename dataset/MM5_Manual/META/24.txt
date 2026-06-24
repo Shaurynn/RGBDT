@@ -1,0 +1,9 @@
+306
+Fruit
+Mandarin
+real, good
+multiple
+multiple
+Yes
+Master IMU Data: 1.4375, -0.132073, -9.6537, 0.00349301, -0.00143767, 0.00722606
+Subordinate IMU Data: 1.47331, -0.185417, -9.75207, 0.000141826, 0.00415203, -0.0069777

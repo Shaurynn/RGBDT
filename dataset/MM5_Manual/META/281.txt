@@ -1,0 +1,9 @@
+567
+Fruit
+Pear
+real, rotten
+residual heat
+residual heat
+Yes
+Master IMU Data: 6.41412, 0.168326, -7.35968, -0.00440185, -0.00210016, 0.00849676
+Subordinate IMU Data: 6.3796, 0.138591, -7.52353, 0.00258945, 0.0054096, -0.00209152

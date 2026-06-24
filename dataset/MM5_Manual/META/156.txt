@@ -1,0 +1,9 @@
+442
+Fruit
+Grapes Green
+fake, real, good
+multiple, bowl
+multiple, bowl
+Yes
+Master IMU Data: 6.41894, 0.182537, -7.36448, -0.00138631, -0.00271377, 0.0102912
+Subordinate IMU Data: 6.3844, 0.110004, -7.54733, 0.001361, 0.00354306, -0.00575885

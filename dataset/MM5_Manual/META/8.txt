@@ -1,0 +1,9 @@
+289
+Fruit
+Lemon
+good, rotten, real
+None
+None
+Yes
+Master IMU Data: 1.39897, -0.0799211, -9.67751, -0.0031831, -0.00270583, 0.0072822
+Subordinate IMU Data: 1.49721, -0.218754, -9.75687, -0.00291251, 0.00412421, -0.0124702

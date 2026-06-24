@@ -1,0 +1,9 @@
+433
+Fruit
+Grapes Green
+real, good, rotten
+multiple
+multiple
+Yes
+Master IMU Data: 6.39002, 0.187301, -7.36438, 0.00106596, -0.000834472, 0.0078451
+Subordinate IMU Data: 6.40827, 0.157596, -7.55681, -0.00107572, 0.00476915, -0.00575634

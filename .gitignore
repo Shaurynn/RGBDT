@@ -219,8 +219,8 @@ __marimo__/
 
 docs/
 data/
-dataset/
 archive/
 runs/
 weights/
 *.db
+results/

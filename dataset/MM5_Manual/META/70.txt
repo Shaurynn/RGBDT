@@ -1,0 +1,9 @@
+352
+Fruit
+Lemon
+real, fake, good, sliced
+multiple
+multiple
+Yes
+Master IMU Data: 1.37964, -0.136758, -9.64872, -0.00136252, -0.0014642, 0.00786644
+Subordinate IMU Data: 1.43988, -0.223504, -9.76636, 0.000749456, 0.00231973, -0.00210304

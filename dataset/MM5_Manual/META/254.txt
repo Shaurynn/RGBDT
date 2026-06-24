@@ -1,0 +1,9 @@
+540
+Fruit
+Apple Green, Apple
+real, good, fake, mirror, hot, cold
+multiple, bowl
+multiple, bowl
+Yes
+Master IMU Data: 6.39002, 0.177823, -7.36439, 0.00104664, -0.00208071, 0.00966538
+Subordinate IMU Data: 6.42261, 0.100511, -7.4998, 0.00380438, 0.00356492, -0.00148684

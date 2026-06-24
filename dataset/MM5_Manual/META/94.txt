@@ -1,0 +1,9 @@
+376
+Fruit
+Mandarin,Lemon
+peel, sliced, real, good
+multiple
+multiple
+Yes
+Master IMU Data: 1.40848, -0.0941206, -9.63441, -0.00319212, -0.000864755, 0.00968997
+Subordinate IMU Data: 1.48285, -0.199674, -9.7188, 0.000750047, 0.00353709, -0.00697936

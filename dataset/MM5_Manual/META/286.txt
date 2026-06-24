@@ -1,0 +1,9 @@
+572
+Fruit
+Pear
+real, rotten, good
+multiple
+multiple
+Yes
+Master IMU Data: 6.41422, 0.206217, -7.39801, -0.00320697, -0.00210766, 0.0109058
+Subordinate IMU Data: 6.42261, 0.129038, -7.54257, 0.00563712, 0.00418948, -0.00087351

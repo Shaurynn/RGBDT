@@ -1,0 +1,9 @@
+579
+Fruit
+Apple Green, Pear, Onion, Onion Red
+real, good
+multiple
+multiple
+Yes
+Master IMU Data: 6.43334, 0.168321, -7.34057, -0.00439291, -0.00209351, 0.00728777
+Subordinate IMU Data: 6.39391, 0.162427, -7.48072, -0.00108026, 0.00292476, -0.00393236
