@@ -70,17 +70,20 @@ The following extractions from our MM5 diagnostic logs demonstrate how the netwo
 ![Raw RGB input image](assets/290.png)
 
 Figure 4: The raw RGB input containing four distinct agricultural items on the inspection turntable.
+
 ![Grad-CAM Red Onion image](assets/onion_red.png)
+
 ![Grad-CAM Pear image](assets/pear.png)
 
-Figure 5 (Left: Red Onion | Right: Pear): Successful class isolation. Notice how the highest gradient regions (deep red) strictly adhere to the localized spatial boundaries of the targeted item. The network successfully suppresses the adjacent items (cool blue regions), proving a mature reliance on the combined RGB-D-T channels to differentiate specific agricultural phenotypes.
+Figure 5 (Top: Red Onion | Bottom: Pear): Successful class isolation. Notice how the highest gradient regions (deep red) strictly adhere to the localized spatial boundaries of the targeted item. The network successfully suppresses the adjacent items (cool blue regions), proving a mature reliance on the combined RGB-D-T channels to differentiate specific agricultural phenotypes.
 
 ### Case Study 2: Debugging Feature Entanglement
 Grad-CAM is not just a presentation tool; it is a critical diagnostic mechanism used to audit the network during the Microtune phase.
 ![Grad-CAM Green Apple image](assets/apple_green_bad.png)
+
 ![Grad-CAM Green Apple image](assets/apple_green.png)
 
-Figure 6 (Left: Diagnostic Failure | Right: Corrected Activation): An example of feature entanglement. During an earlier, sub-optimal training phase (Top), the network failed to isolate the "Green Apple" class, incorrectly activating its gradients on the surrounding items. By auditing this heatmap, we confirmed the model had fallen into a local minimum. The fully optimized pipeline (Bottom) successfully resolves the feature space, pinning the activation strictly to the target apple.
+Figure 6 (Top: Diagnostic Failure | Bottom: Corrected Activation): An example of feature entanglement. During an earlier, sub-optimal training phase (Top), the network failed to isolate the "Green Apple" class, incorrectly activating its gradients on the surrounding items. By auditing this heatmap, we confirmed the model had fallen into a local minimum. The fully optimized pipeline (Bottom) successfully resolves the feature space, pinning the activation strictly to the target apple.
 
 ### Case Study 3: Environmental Artifact Rejection
 ![Grad-CAM Background Bias image](assets/cup_hot.png)
