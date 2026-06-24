@@ -33,7 +33,7 @@ Note: To test a new architecture, add it to `models.py` and run `uv run train.py
 ### Hyperparameter Optimization (HPO)
 Optuna executed a 30-trial Hyperband-pruned sweep to establish the mathematical ceiling for the architecture under aggressive affine and thermal-drift augmentations.
 
-![Optuna Parallel Coordinate Plot](assets\optuna_parallel.png)
+![Optuna Parallel Coordinate Plot](assets/optuna_parallel.png)
 Figure 1: Parallel Coordinate Plot detailing the Optuna trials. The converging lines track the hyperparameter combinations, with the darkest paths indicating the specific routing that yielded the highest objective value (Validation mIoU).
 
 * Optimal Optimizer: SGD with Nesterov Momentum
