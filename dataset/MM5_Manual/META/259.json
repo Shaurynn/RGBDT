@@ -1,0 +1,31 @@
+{
+  "category": "Fruit, Kitchen Items",
+  "challenge": [
+    "real",
+    "good",
+    "fake",
+    "mirror",
+    "hot",
+    "cold"
+  ],
+  "comment": "multiple, bowl",
+  "green_screen": "Yes",
+  "master_imu": {
+    "ax": 6.399503231048584,
+    "ay": 0.1778441071510315,
+    "az": -7.316481113433838,
+    "gx": -0.0019407738000154495,
+    "gy": 0.0034812483936548233,
+    "gz": 0.007239211816340685
+  },
+  "sequence": 545,
+  "subcategory": "Apple Green, Apple, Cup",
+  "subordinate_imu": {
+    "ax": 6.3939433097839355,
+    "ay": 0.11002147197723389,
+    "az": -7.523556709289551,
+    "gx": -0.0004665821325033903,
+    "gy": 0.0035516489297151566,
+    "gz": -0.001489679329097271
+  }
+}

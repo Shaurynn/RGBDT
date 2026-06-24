@@ -1,0 +1,9 @@
+493
+Fruit
+Apple
+real, good, fake
+multiple
+multiple
+Yes
+Master IMU Data: 6.4044, 0.196779, -7.34525, -0.00319651, -0.00271581, 0.00909568
+Subordinate IMU Data: 6.36528, 0.105266, -7.5283, 0.00440391, 0.00169184, -0.00881328

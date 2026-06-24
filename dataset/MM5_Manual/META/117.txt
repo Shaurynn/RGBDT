@@ -1,0 +1,9 @@
+403
+Vegetables
+Red Onion
+real, good, mirror
+multiple
+multiple
+Yes
+Master IMU Data: 6.40442, 0.139913, -7.3357, -0.00378501, -0.00270541, 0.00668219
+Subordinate IMU Data: 6.42739, 0.129033, -7.54733, 0.000751449, 0.00475853, -0.0106356

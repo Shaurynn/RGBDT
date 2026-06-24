@@ -1,0 +1,9 @@
+556
+Fruit, Kitchen Items
+Pear, Cup
+hot, real, good, rotten
+residual heat
+residual heat
+Yes
+Master IMU Data: 6.38993, 0.225225, -7.34998, 0.00106445, -0.000219669, 0.00844619
+Subordinate IMU Data: 6.44649, 0.124303, -7.50454, 0.002584, 0.00416777, -0.00453587

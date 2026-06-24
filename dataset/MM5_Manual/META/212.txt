@@ -1,0 +1,9 @@
+498
+Fruit
+Apple Green
+real, good
+multiple
+multiple
+Yes
+Master IMU Data: 6.40451, 0.168328, -7.36924, -0.00321447, -0.000881389, 0.0127124
+Subordinate IMU Data: 6.39395, 0.148071, -7.56632, 0.00319605, 0.0047865, -0.0045334

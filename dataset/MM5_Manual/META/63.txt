@@ -1,0 +1,9 @@
+345
+Fruit
+Lemon
+sliced, good, real
+bowl
+bowl
+Yes
+Master IMU Data: 1.40351, -0.146213, -9.5769, -0.00441079, -0.00210681, 0.00970575
+Subordinate IMU Data: 1.43985, -0.190154, -9.7378, 0.000133053, 0.00107193, -0.0057679

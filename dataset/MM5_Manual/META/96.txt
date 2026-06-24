@@ -1,0 +1,9 @@
+378
+Fruit
+Mandarin,Lemon,Kettle
+peel, sliced, real, good, mirror
+multiple
+multiple
+Yes
+Master IMU Data: 1.40848, -0.132029, -9.62484, -0.00261833, -0.00581353, 0.0109217
+Subordinate IMU Data: 1.49243, -0.223509, -9.75211, -0.00168656, 0.00415654, -0.00392865
