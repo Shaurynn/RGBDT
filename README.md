@@ -103,4 +103,21 @@ You cannot compile the TensorRT engine on x86 architecture. The engine must be c
 ```bash 
 /usr/src/tensorrt/bin/trtexec \   --onnx=trimodal_seg_dynamic.onnx \   --saveEngine=trimodal_seg_fp16.engine \   --fp16 \   --workspace=4096 \   --optShapes=input_rgbdt:1x5x480x640 \   --minShapes=input_rgbdt:1x5x480x640 \   --maxShapes=input_rgbdt:4x5x480x640 
 ```
-This .engine file replaces the PyTorch architecture for the production inference script, enabling 30+ FPS real-time processing for UAV and UVSS workloads.
+This benchmark confirms whether the heavy 5-channel tensor architecture can maintain 30+ FPS inference speeds under strict edge hardware constraints.
+
+---
+
+## 🙏 Acknowledgments & Citations
+This Proof of Concept would not be possible without the MM5 Dataset. We sincerely thank the original creators and authors for their foundational work in multi-modal data collection, hardware synchronization, and curation, which enabled the training and evaluation of this architecture.
+
+If you utilize this pipeline, the underlying architecture, or the data, please cite the primary publication alongside the dataset repository:
+
+Primary Publication:
+> Brenner, M., Reyes, N. H., Susnjak, T., & Barczak, A. L. C. (2026). MM5: Multimodal image capture and dataset generation for RGB, depth, thermal, UV, and NIR. Information Fusion, 126, 103516.
+
+> DOI: https:doi.org/10.1016/j.inffus.2025.103516
+
+Dataset:
+> Brenner, M., Reyes, N., Susnjak, T., & Barczak, A. (2025). MM5: Multimodal Image Dataset. figshare. Dataset.
+
+> DOI: https:doi.org/10.6084/m9.figshare.28722164
