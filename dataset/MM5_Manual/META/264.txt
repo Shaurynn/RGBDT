@@ -1,9 +1,0 @@
-550
-Kitchen Items
-Cup
-hot, cold
-residual heat
-residual heat
-Yes
-Master IMU Data: 6.42385, 0.191993, -7.39326, 0.00105111, -0.00207738, 0.00906089
-Subordinate IMU Data: 6.38437, 0.176659, -7.54252, 0.00135687, 0.00170071, -0.00332481

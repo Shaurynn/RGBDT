@@ -1,9 +1,0 @@
-326
-Fruit
-Mandarin
-real, rotten, good, fake
-multiple
-multiple
-Yes
-Master IMU Data: 1.36989, -0.155683, -9.61034, 0.00105854, -0.00145592, 0.00845299
-Subordinate IMU Data: 1.45419, -0.185414, -9.75682, -0.000473657, 0.00230167, -0.00637424

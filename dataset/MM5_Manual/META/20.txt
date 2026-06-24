@@ -1,9 +1,0 @@
-302
-Fruit
-Lemon
-real, rotten, good, fake, mirror
-bowl
-bowl
-Yes
-Master IMU Data: 1.39883, -0.141497, -9.62002, 0.0028792, -0.00206203, 0.00783844
-Subordinate IMU Data: 1.39685, -0.209162, -9.71403, 0.00135768, 0.00170479, -0.0021047

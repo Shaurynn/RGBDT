@@ -1,9 +1,0 @@
-466
-Fruit
-Grapes Blue
-real, good, rotten, fake
-multiple
-multiple
-Yes
-Master IMU Data: 6.38503, 0.196814, -7.31642, 0.0022638, -0.000223849, 0.0102507
-Subordinate IMU Data: 6.38438, 0.133833, -7.51878, 0.00318758, 0.00231508, -0.00576175

@@ -1,9 +1,0 @@
-387
-Fruit
-Lemon
-rotten, real
-multiple
-multiple
-Yes
-Master IMU Data: 1.40842, -0.0941086, -9.61523, -0.00440783, -0.00148868, 0.00970234
-Subordinate IMU Data: 1.49241, -0.190163, -9.72831, 0.00318717, 0.00231304, -0.00637181

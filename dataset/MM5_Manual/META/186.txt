@@ -1,9 +1,0 @@
-472
-Fruit
-Grapes Blue, Grapes Green
-fake
-multiple
-multiple
-Yes
-Master IMU Data: 6.41407, 0.192029, -7.35008, -0.000157253, -0.000232127, 0.00966415
-Subordinate IMU Data: 6.35573, 0.119519, -7.56633, -0.000468017, 0.00475882, -0.00941627

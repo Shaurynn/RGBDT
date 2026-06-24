@@ -1,9 +1,0 @@
-371
-Fruit
-Mandarin
-peel, sliced, real, good
-None
-None
-Yes
-Master IMU Data: 1.41312, -0.141476, -9.56734, -0.00256634, -0.00146335, 0.00666642
-Subordinate IMU Data: 1.46853, -0.171149, -9.77108, 0.00320656, 0.00726812, -0.000254771

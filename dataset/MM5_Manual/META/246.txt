@@ -1,9 +1,0 @@
-532
-Fruit
-Apple Green, Apple
-real, good, fake
-multiple
-multiple
-Yes
-Master IMU Data: 6.38033, 0.187319, -7.34997, 0.000477395, 0.00102367, 0.00663039
-Subordinate IMU Data: 6.37959, 0.162403, -7.514, -0.0010835, 0.00290845, -0.0088128

@@ -1,9 +1,0 @@
-592
-Vegetables
-Carrot
-fake
-multiple
-multiple
-Yes
-Master IMU Data: 6.43814, 0.206228, -7.34536, -0.00139972, -0.00272375, 0.0121047
-Subordinate IMU Data: 6.45605, 0.138569, -7.5188, 0.00136615, 0.00417621, -0.000876347

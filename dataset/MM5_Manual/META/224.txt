@@ -1,9 +1,0 @@
-510
-Fruit
-Apple Green
-rotten, real
-multiple
-multiple
-Yes
-Master IMU Data: 6.40442, 0.22047, -7.35482, -0.000766591, -0.000853155, 0.00967203
-Subordinate IMU Data: 6.36049, 0.143346, -7.53778, 0.00135878, 0.00231755, -0.00332275
