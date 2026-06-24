@@ -100,6 +100,7 @@ You cannot compile the TensorRT engine on x86 architecture. The engine must be c
 1. Transfer the `.onnx` file to the Jetson Orin Nano Super.
 2. Execute NVIDIA's `trtexec` to quantize the 32-bit floating-point weights to FP16 and fuse the memory operations.
 
-```bash /usr/src/tensorrt/bin/trtexec \   --onnx=trimodal_seg_dynamic.onnx \   --saveEngine=trimodal_seg_fp16.engine \   --fp16 \   --workspace=4096 \   --optShapes=input_rgbdt:1x5x480x640 \   --minShapes=input_rgbdt:1x5x480x640 \   --maxShapes=input_rgbdt:4x5x480x640 
+```bash 
+/usr/src/tensorrt/bin/trtexec \   --onnx=trimodal_seg_dynamic.onnx \   --saveEngine=trimodal_seg_fp16.engine \   --fp16 \   --workspace=4096 \   --optShapes=input_rgbdt:1x5x480x640 \   --minShapes=input_rgbdt:1x5x480x640 \   --maxShapes=input_rgbdt:4x5x480x640 
 ```
 This .engine file replaces the PyTorch architecture for the production inference script, enabling 30+ FPS real-time processing for UAV and UVSS workloads.
